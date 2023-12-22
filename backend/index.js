@@ -51,6 +51,9 @@ function authenticateJWT(req, res, next) {
  */
 
 let USERS = [];
+let ADMINS = [];
+
+let COURSES = [];
 
 //signup for users
 app.post("/user/signup", (req, res) => {
@@ -86,6 +89,50 @@ app.post("/user/login", (req, res) => {
     res.status(403).json({
       message: `Invalid user ${username}!`,
     });
+  }
+});
+
+//signup for admins
+app.post("/admin/signup", (req, res) => {
+  const admin = req.body;
+  const adminExists = ADMINS.find((adm) => adm.username === admin.username);
+
+  //if exisitng admin throw erroe that cant create new admins
+  if (adminExists) {
+    res.status(403).json({
+      message: `Admin already exists!`,
+    });
+  } else {
+    //add to the admins list
+    const timestamp = new Date().getTime();
+    ADMIN.push(admin);
+    res.status(200).json({
+      message: `Admin ${admin.username} created at ${timestamp} !`,
+    });
+  }
+});
+
+//signing for admins
+app.post(`/admin/signin`, (req, res) => {
+  //check if already creds exists, then generate token for them and logged them in
+  //else thriough error 403 and exit
+  const { admUsername, admPassword } = req.headers;
+  const adm = ADMINS.find(
+    (adm) => adm.username === admUsername && adm.password == admPassword
+  );
+
+  if (adm) {
+    //then exist , create token and log in
+    const timestamp = new Date().getTime();
+    const token = generateJWT(adm);
+    res.status(200).json({
+      message: `Admin ${adm.username} logged in at ${timestamp}`,
+      token 
+    });
+  } else {
+    res.status(403).json({
+        message:`Admin ${adm.username} failed to log in!`
+    })
   }
 });
 
