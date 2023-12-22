@@ -1,9 +1,47 @@
 const express = require("express");
 const app = express();
 const cors = require("cors");
+const jwt = require("jsonwebtoken");
+
+require("dotenv").config();
 
 //middleware to use the cors
 app.use(cors());
+
+//generate a JWTToken for easier accesa dn verifying authentication
+//storing the secret keys in .env files
+const secretKey = process.env.SECRET_KEY;
+
+function generateJWT(profile) {
+  //generate a token for each profile
+  const payload = { username: profile.username };
+  return jwt.sign(payload, secretKey, { expiresIn: "12h" });
+}
+
+//to also check if the authentication is valid or not
+function authenticateJWT(req, res, next) {
+  //middleware to check jwt authentication and handleing them
+  const authHeader = req.header.authorization;
+
+  if (authHeader) {
+    // of the form bearer<space>token
+    const token = authHeader.split(" ")[1];
+    //and verify
+    jwt.verify(token, secretKey, (err, user) => {
+      if (err) {
+        return res.sendStatus(403).json({
+          message: `JWT AUTH Failed!`,
+        });
+      }
+      req.user = user;
+      next();
+    });
+  } else {
+    res.sendStatus(401).json({
+      message: "Now please authenticate yourself!",
+    });
+  }
+}
 
 /**
  * 2 types of users:
